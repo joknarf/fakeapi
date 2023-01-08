@@ -3,7 +3,7 @@ Provides fakeapi version information.
 """
 
 # This file is auto-generated! Do not edit!
-# Use `python -m incremental.update pgtree` to change this file.
+# Use `python -m incremental.update fakeapi` to change this file.
 
 from incremental import Version
 

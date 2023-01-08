@@ -11,6 +11,6 @@ install:
 script:
   - pylint fakeapi/fakeapi.py ; echo done
 #  - python -m unittest discover -s tests/
-#  - coverage run tests/test_pgtree.py
+#  - coverage run tests/test_fakeapi.py
 #after_success:
 #  - bash <(curl -s https://codecov.io/bash)
