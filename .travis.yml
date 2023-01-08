@@ -1,0 +1,16 @@
+# .travis.yml
+
+language: python
+python: 
+  - "3.7"
+cache: pip
+#dist: xenial
+dist: trusty
+install:
+  - pip install lint codecov incremental
+script:
+  - pylint fakeapi/fakeapi.py ; echo done
+#  - python -m unittest discover -s tests/
+#  - coverage run tests/test_pgtree.py
+#after_success:
+#  - bash <(curl -s https://codecov.io/bash)
