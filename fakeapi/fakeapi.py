@@ -50,7 +50,7 @@ api = FakeAPI(url_config = {
 })
 
 """
-# pylint: disable=W0613
+# pylint: disable=W0613,C0103,R0902,R0903
 
 import json
 import re
@@ -62,6 +62,7 @@ class FakeResponse():
     """ Fake Response """
     data        = None
     status_code = 200
+    ok          = True
     url         = None
     method      = None
     payload     = None
@@ -137,6 +138,7 @@ class FakeAPI():
             # print('Not found')
         self.response.data = return_data
         self.response.content = json.dumps(return_data)
+        self.response.ok = self.response.status_code < 400
         if self.returns == 'json':
             return return_data
         return self.response
