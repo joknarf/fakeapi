@@ -1,3 +1,9 @@
+[![Upload Python Package](https://github.com/joknarf/fakeapi/workflows/Upload%20Python%20Package/badge.svg)](https://github.com/joknarf/fakeapi/actions?query=workflow%3A%22Upload+Python+Package%22)
+[![Pypi version](https://img.shields.io/pypi/v/fakeapi.svg)](https://pypi.org/project/fakeapi/)
+[![Downloads](https://pepy.tech/badge/fakeapi)](https://pepy.tech/project/fakeapi)
+[![Python versions](https://img.shields.io/badge/python-3.6-blue.svg)](https://shields.io/)
+[![Licence](https://img.shields.io/badge/licence-MIT-blue.svg)](https://shields.io/)
+
 # fakeapi
 Faking/Mocking API Rest Call requests
 
