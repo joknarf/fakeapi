@@ -2,41 +2,13 @@
 FakeAPI class to simulate rest API calls from json static files/data
 Usefull to easily mock requests or api-client (APIClient) in unittest
 
-api = FakeAPI(url_config: dict, response: string)
+api = FakeAPI(url_config: dict, url_json: string, response: string)
 
 url_config permits to set up specific data or json file for each url
 and method (get/post/patch/put/delete), also permits to simulate
 http status_code in response.
 
-You can put the json test sets response files in:
-fixtures/<api endpoint>/<method>.json
-<api endpoint>: url to call without 'https://'
-<method>: get / post / put / patch / delete
-Example:
-fixtures/example.com/api/v1/users/get.json
-fixtures/example.com/api/v1/users/post.json
-
-As url can contains characters that cannot be used in path name (mostly on Windows OS),
-- fakeapi removes server port from url (example.com:8443 => example.com)
-- fakeapi is trying non encoded urls and encoded urls to get path name to json file.
-- fakeapi it trying file name replacing ? and & chars with # (windows can't have ?& in file names)
-json file to perform get from url 'https://example.com:8443/v1/users?search=My search&foo=/bar'
-will be taken from either :
-'fixtures/example.com/api/v1/users?name=Joe Man&foo=/bar/get.json'
-'fixtures/example.com/api/v1/users#name=Joe Man&foo=/bar/get.json'
-'fixtures/example.com/api/v1/users?name=Joe+Man&foo=%2Fbar/get.json'
-'fixtures/example.com/api/v1/users#name=Joe+Man#foo=%2Fbar/get.json'
-(not that + stands for space character, not %20 !)
-
-The json file names can also be specified using url_config for each <url>/<method>:
-
-api = FakeAPI(url_config = {
-    'https://example.com/api/subnet?cidr=192.160.0.1/21/get':
-        {'json': 'example.com/api/v1/subnet_cidr.json'}
-})
-the url key can be url encoded ('https://example.com/api/subnet?cidr=192.160.0.1%2F21/get')
-
-url_config can also be used to determine directly data to return instead of using json files:
+url_config will be used to determine data to return instead of using json files:
 using 'data' key
 api = FakeAPI(url_config = {
     'https://example.com/api/subnet?cidr=192.160.0.0/24': {'data':
@@ -49,18 +21,19 @@ api = FakeAPI(url_config = {
     'https://example.com/api/subnet?cidr=192.160.0.0/24': {'status_code': 404}
 })
 
+url_config data can be loaded by json file specified in url_json.
 """
 # pylint: disable=W0613,C0103,R0902,R0903
 
 import json
-import re
-import os.path
-from urllib.parse import urlencode, unquote_plus
+import sys
+from copy import copy
+from urllib.parse import urlencode, urlparse, unquote_plus #, parse_qs, quote
 from unittest.mock import MagicMock, patch
+from requests.utils import requote_uri
 
 class FakeResponse():
     """ Fake Response """
-    data        = None
     status_code = 200
     ok          = True
     url         = None
@@ -73,75 +46,83 @@ class FakeResponse():
 
     def json(self):
         """ return data """
-        return self.data
+        return json.loads(self.content)
 
 class FakeAPI():
     """ Fake API from static json files """
-    response = FakeResponse()
 
-    def __init__(self, url_config=None, returns='response'):
+    def __init__(self, url_config=None, url_json=None, returns='response'):
         """
-            jsmocks optional dict to map urls to json files
+            url_config optional dict to map urls to json files
+            url_json path to json file containing url_config dict
             returns may be 'response' or 'json'
         """
         self.url_config = url_config or {}
+        if url_json:
+            with open(url_json, 'r', encoding='utf-8') as jsf:
+                self.url_config = json.load(jsf)
         self.returns = returns
+        self.url_history = []
+        self.url_calls = {}
+        self.responses = []
+        self.url_calls = {}
+
+    def get_url(self, url, params):
+        """
+        full url string from current url + params
+        calculated like in response.url from requests
+        """
+        params = params or {}
+        urlp = urlparse(url)
+        query = urlencode(params)
+        urlp = urlp._replace(query='&'.join([urlp.query, query]).strip('&'))
+        return requote_uri(urlp.geturl())
+
+    def get_url2(self, url, params):
+        """ full url without encoding """
+        params = params or {}
+        urlp = urlparse(url)
+        query = unquote_plus(urlencode(params))
+        urlp = urlp._replace(query='&'.join([urlp.query, query]).strip('&'))
+        return urlp.geturl()
+
+    def get_conf(self, method, url, params):
+        """ retrieve conf for url in url_config """
+        url_key1 = self.get_url(url, params) + f'/{method}'
+        url_key2 = self.get_url2(url, params) + f'/{method}'
+        for url_k in list({url_key1, url_key2}):
+            if url_k in self.url_config:
+                return self.url_config[url_k]
+        return None
 
     def fake_call(self, method, url, data=None, params=None):
         """ load json file corresponding to url/method """
-        self.response.method = method
-        self.response.params = params
-        self.response.payload = data
-        self.response.status_code = 201 if method == 'post' else 200
-        query_simple = ''
-        query_encoded = ''
-        if params:
-            query_encoded = '?' + urlencode(params)
-            query_simple = '?' + unquote_plus(urlencode(params))
-        for query in list({query_simple, query_encoded}):
-            full_url = url + query
-            print(f'Calling: {method} {full_url}')
-            self.response.url = full_url
-            return_data = {}
-            json_file = None
-            url_conf = None
-            if f'{full_url}/{method}' in self.url_config:
-                url_conf = self.url_config[f'{full_url}/{method}']
-                if 'json' in url_conf:
-                    json_file = url_conf['json']
-            elif full_url in self.url_config:
-                url_conf = self.url_config[full_url]
-                if 'json' in url_conf:
-                    json_file = f"{url_conf['json']}/{method}.json"
-            if url_conf:
-                if 'status_code' in url_conf:
-                    self.response.status_code = url_conf['status_code']
-                if 'data' in url_conf:
-                    return_data = url_conf['data']
-                    break
-            # automatic mapping to url/method.json file to get return_data
-            if not json_file:
-                json_file = re.sub('^[^/]*://','', full_url)           # remove scheme (http://)
-                json_file = re.sub('^([^/]*):[0-9]*','\\1', json_file) # remove port (:8080)
-                json_file += f'/{method}.json'
-            json_file = f'fixtures/{json_file}'
-            print(f"Info: Looking data in {json_file}")
-            if os.path.exists(json_file):
-                with open(json_file, 'r', encoding='utf-8') as jsf:
-                    return_data = json.load(jsf)
-                break
-            json_file = re.sub('[?&]','#', json_file) # Windows can't jump
-            if os.path.exists(json_file):
-                with open(json_file, 'r', encoding='utf-8') as jsf:
-                    return_data = json.load(jsf)
-                break
-            # print('Not found')
-        self.response.data = return_data
-        self.response.content = json.dumps(return_data)
-        self.response.ok = self.response.status_code < 400
+        response = FakeResponse()
+        response.method = method
+        response.params = params
+        response.payload = data
+        response.status_code = 201 if method == 'post' else 200
+        response.url = self.get_url(url, params)
+        url_method = f'{response.url}/{method}'
+        print(f'Calling: {method} {response.url}', file=sys.stderr)
+        return_data = {}
+        url_conf = self.get_conf(method, url, params)
+        if url_conf:
+            if 'status_code' in url_conf:
+                response.status_code = url_conf['status_code']
+            return_data = url_conf['data']
+        response.content = json.dumps(return_data)
+        response.ok = response.status_code < 400
+        self.responses.append(copy(response))
+        self.url_history.append(url_method)
+        self.url_calls[url_method] = {
+            'data': return_data,
+            'status_code': response.status_code,
+            'payload': data
+        }
         if self.returns == 'json':
             return return_data
-        return self.response
+        return response
 
     def get(self, url, params=None, **kwargs):
         """ http get simulation """
