@@ -11,14 +11,14 @@ http status_code in response.
 url_config will be used to determine data to return instead of using json files:
 using 'data' key
 api = FakeAPI(url_config = {
-    'https://example.com/api/subnet?cidr=192.160.0.0/24': {'data':
+    'GET https://example.com/api/subnet?cidr=192.160.0.0/24': {'data':
         {'result': [{'gateway':'192.168.0.1'}]}
     }
 })
 
 url_config can be used to put the status_code wanted in the response:
 api = FakeAPI(url_config = {
-    'https://example.com/api/subnet?cidr=192.160.0.0/24': {'status_code': 404}
+    'GET https://example.com/api/subnet?cidr=192.160.0.0/24': {'status_code': 404}
 })
 
 url_config data can be loaded by json file specified in url_json.
@@ -98,14 +98,15 @@ class FakeAPI():
 
     def get_conf(self, method, url, params, data):
         """ retrieve conf for url in url_config """
+        method = method.upper()
         url_key1 = get_url(url, params)
         url_key2 = get_url2(url, params)
         url_key3 = get_url(url_key1, data)
         url_key4 = get_url2(url_key2, data)
-        self.url_history_full.append(f'{url_key3}/{method}')
+        self.url_history_full.append(f'{method} {url_key3}')
         print(f'fakeapi: Calling: {method} {url_key3}', file=sys.stderr)
         for url_k in list({url_key3, url_key4, url_key1, url_key2}):
-            url_k += f'/{method}'
+            url_k = f'{method} {url_k}'
             if url_k in self.url_config:
                 return self.url_config[url_k]
         print('fakeapi: No URL config found')
@@ -119,14 +120,15 @@ class FakeAPI():
         response.payload = data
         response.status_code = 201 if method == 'post' else 200
         response.url = get_url(url, params)
-        url_method = f'{response.url}/{method}'
+        url_method = f'{method} {response.url}'
         return_data = {}
         url_conf = self.get_conf(method, url, params, data)
         if url_conf:
             if 'status_code' in url_conf:
                 response.status_code = url_conf['status_code']
             return_data = url_conf['data']
-        response.content = json.dumps(return_data)
+        response.text = json.dumps(return_data)
+        response.content = json.dumps(return_data).encode('utf-8')
         response.ok = response.status_code < 400
         self.responses.append(copy(response))
         self.url_history.append(url_method)
