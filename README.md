@@ -23,7 +23,7 @@ Another purpose is to use FakeAPI class to mock http requests when doing Unit te
 >```python
 >>>> from fakeapi import FakeAPI
 >>>> api = FakeAPI({
->  'http://localhost/api': {
+>  'http://localhost/api/get': {
 >    'status_code': 200,
 >    'data': {
 >      'message': 'Call successfull'
@@ -53,7 +53,7 @@ Usefull to test Application that is calling 3rd party API that is not to be test
 >from fakeapi import FakeAPI
 >
 >class TestMyCLI(unittest.TestCase):
->  fakeapi = FakeAPI({'http://localhost/api': {'data': {'message': 'Call successfull'}}})
+>  fakeapi = FakeAPI({'http://localhost/api/get': {'data': {'message': 'Call successfull'}}})
 >  def setUp(self):
 >    # mock 'mycli.requests' get/post/patch/put/delete calls to fakeapi
 >    self.mocks = self.fakeapi.mock_module(self, 'mycli.requests')
@@ -119,8 +119,6 @@ Providing data in url_config for url
 
 When a request method occurs on `<url>` if the key `<url>/<method>` has a entry in url_config, returns 'data'/'status_code' if defined.  
 
-
-
 ## FakePI returns FakeResponse or json
 
 FakeAPI methods by default returns `FakeResponse` with following :
@@ -152,7 +150,7 @@ from fakeapi import FakeAPI
 from mycli import MyClient
 class UnitTest(unittest.TestCase):
     """ Unit Testing mocking MyClient get/post/put/patch """
-    fakeapi = FakeAPI()
+    fakeapi = FakeAPI({'http://localhost/api/get': {'data': {'message': 'Call successfull'}}})
     apicli = MyClient()
 
     def setUp(self):

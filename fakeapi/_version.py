@@ -7,5 +7,5 @@ Provides fakeapi version information.
 
 from incremental import Version
 
-__version__ = Version("fakeapi", 1, 0, 1)
+__version__ = Version("fakeapi", 1, 0, 2)
 __all__ = ["__version__"]
