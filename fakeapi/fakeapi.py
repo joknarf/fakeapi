@@ -32,6 +32,26 @@ from urllib.parse import urlencode, urlparse, unquote_plus #, parse_qs, quote
 from unittest.mock import MagicMock, patch
 from requests.utils import requote_uri
 
+def get_url(url, params):
+    """
+    full url string from current url + params
+    calculated like in response.url from requests
+    """
+    params = params or {}
+    urlp = urlparse(url)
+    query = urlencode(params)
+    urlp = urlp._replace(query='&'.join([urlp.query, query]).strip('&'))
+    return requote_uri(urlp.geturl())
+
+def get_url2(url, params):
+    """ full url without encoding """
+    params = params or {}
+    urlp = urlparse(url)
+    query = unquote_plus(urlencode(params))
+    urlp = urlp._replace(query='&'.join([urlp.query, query]).strip('&'))
+    return urlp.geturl()
+
+
 class FakeResponse():
     """ Fake Response """
     status_code = 200
@@ -57,42 +77,38 @@ class FakeAPI():
             url_json path to json file containing url_config dict
             returns may be 'response' or 'json'
         """
+        self.returns = returns
+        self.set_config(url_config, url_json)
+        self.reset_history()
+
+    def set_config(self, url_config=None, url_json=None):
+        """ Set url_config """
         self.url_config = url_config or {}
         if url_json:
             with open(url_json, 'r', encoding='utf-8') as jsf:
                 self.url_config = json.load(jsf)
-        self.returns = returns
+
+    def reset_history(self):
+        """ Reset all calls history"""
         self.url_history = []
+        self.url_history_full = []
         self.url_calls = {}
         self.responses = []
-        self.url_calls = {}
 
-    def get_url(self, url, params):
-        """
-        full url string from current url + params
-        calculated like in response.url from requests
-        """
-        params = params or {}
-        urlp = urlparse(url)
-        query = urlencode(params)
-        urlp = urlp._replace(query='&'.join([urlp.query, query]).strip('&'))
-        return requote_uri(urlp.geturl())
 
-    def get_url2(self, url, params):
-        """ full url without encoding """
-        params = params or {}
-        urlp = urlparse(url)
-        query = unquote_plus(urlencode(params))
-        urlp = urlp._replace(query='&'.join([urlp.query, query]).strip('&'))
-        return urlp.geturl()
-
-    def get_conf(self, method, url, params):
+    def get_conf(self, method, url, params, data):
         """ retrieve conf for url in url_config """
-        url_key1 = self.get_url(url, params) + f'/{method}'
-        url_key2 = self.get_url2(url, params) + f'/{method}'
-        for url_k in list({url_key1, url_key2}):
+        url_key1 = get_url(url, params)
+        url_key2 = get_url2(url, params)
+        url_key3 = get_url(url_key1, data)
+        url_key4 = get_url2(url_key2, data)
+        self.url_history_full.append(f'{url_key3}/{method}')
+        print(f'fakeapi: Calling: {method} {url_key3}', file=sys.stderr)
+        for url_k in list({url_key3, url_key4, url_key1, url_key2}):
+            url_k += f'/{method}'
             if url_k in self.url_config:
                 return self.url_config[url_k]
+        print('fakeapi: No URL config found')
         return None
 
     def fake_call(self, method, url, data=None, params=None):
@@ -102,11 +118,10 @@ class FakeAPI():
         response.params = params
         response.payload = data
         response.status_code = 201 if method == 'post' else 200
-        response.url = self.get_url(url, params)
+        response.url = get_url(url, params)
         url_method = f'{response.url}/{method}'
-        print(f'Calling: {method} {response.url}', file=sys.stderr)
         return_data = {}
-        url_conf = self.get_conf(method, url, params)
+        url_conf = self.get_conf(method, url, params, data)
         if url_conf:
             if 'status_code' in url_conf:
                 response.status_code = url_conf['status_code']
