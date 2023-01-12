@@ -161,9 +161,9 @@ class UnitTest(unittest.TestCase):
 
     def test_call_api(self):
         """ test_call_api """
-        response = self.apicli.call_api()
+        data = self.apicli.call_api()
         self.apicli.get.assert_called_with('http://localhost/api')
-        print(response.json())
+        print(data)
 ```
 
 ## Generating test sets 
