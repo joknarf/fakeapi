@@ -1,4 +1,5 @@
 """ urlconfighelper """
+# pylint: disable=W0613,E0239
 import json
 import fakeapi
 UrlConfigHelperBase = fakeapi.UrlConfigHelperBase
