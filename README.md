@@ -184,7 +184,7 @@ from mycli import MyClient
 import fakeapi
 # set the Base class for UrlConfigHelper to your class to test
 fakeapi.UrlConfigHelperBase = MyClient
-from urlconfighelper import UrlConfigHelper
+from fakeapi.urlconfighelper import UrlConfigHelper
 
 api = UrlConfigHelper()
 api.call_api()    # make calls to the API and updates api.url_config
