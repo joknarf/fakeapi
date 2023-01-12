@@ -32,6 +32,8 @@ from urllib.parse import urlencode, urlparse, unquote_plus #, parse_qs, quote
 from unittest.mock import MagicMock, patch
 from requests.utils import requote_uri
 
+UrlConfigHelperBase = object
+
 def get_url(url, params):
     """
     full url string from current url + params
@@ -120,7 +122,7 @@ class FakeAPI():
         response.payload = data
         response.status_code = 201 if method == 'post' else 200
         response.url = get_url(url, params)
-        url_method = f'{method} {response.url}'
+        url_method = f'{method.upper()} {response.url}'
         return_data = {}
         url_conf = self.get_conf(method, url, params, data)
         if url_conf:

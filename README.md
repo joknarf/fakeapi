@@ -165,3 +165,29 @@ class UnitTest(unittest.TestCase):
         self.apicli.get.assert_called_with('http://localhost/api')
         print(response.json())
 ```
+
+## Generating test sets 
+
+To have url_config corresponding to API calls, you can generate url_config from real calls to API, 
+then use the result in your tests.
+
+The urlconfighelper module can help, as can create a class derived from your class,
+supercharging the get/post/put/pach/delete method to generate url_config for all calls.
+
+You can then save the url_config containing all calls you made to a json file to be used as url_config in tests.
+
+Example:
+```python
+""" Generate url_config for tests from MyClient real API calls """
+import json
+from mycli import MyClient
+import fakeapi
+# set the Base class for UrlConfigHelper to your class to test
+fakeapi.UrlConfigHelperBase = MyClient
+from urlconfighelper import UrlConfigHelper
+
+api = UrlConfigHelper()
+api.call_api()    # make calls to the API and updates api.url_config
+api.save_urlconfig('mytests.json')
+print(json.dumps(api.url_config, indent=2))
+```
