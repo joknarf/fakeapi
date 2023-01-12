@@ -1,0 +1,7 @@
+{
+    "GET http://localhost/api/test.json": {
+        "data": {
+            "message": "data from json file"
+        }
+    }
+}
