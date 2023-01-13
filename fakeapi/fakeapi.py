@@ -25,6 +25,8 @@ url_config data can be loaded by json file specified in url_json.
 """
 # pylint: disable=W0613,C0103,R0902,R0903
 
+__author__ = "Franck Jouvanceau"
+
 import json
 import sys
 from copy import copy
