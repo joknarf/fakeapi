@@ -44,7 +44,7 @@ def printjs(data):
     """ print data in json"""
     print(json.dumps(data, indent=2))
 
-
+COMMENT = '''
 def other_tests(api):
     """ debug tests """
     r1 = api.get('http://localhost/api')
@@ -67,7 +67,7 @@ def other_tests(api):
 
     #print(requests.utils.requote_uri('https://reqres.in/api/users/1?q=toto titi'))
     #print(requests.utils.requote_uri('https://reqres.in/api/users/1?q=toto titi/cho'))
-
+'''
 class UnitTest(unittest.TestCase):
     """ testing fakeapi """
     api = FakeAPI(url_config)
