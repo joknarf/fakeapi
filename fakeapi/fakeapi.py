@@ -33,7 +33,7 @@ from copy import copy
 from urllib.parse import urlencode, urlparse, unquote_plus #, parse_qs, quote
 from unittest.mock import MagicMock, patch
 from requests.utils import requote_uri
-from server import FakeAPIServer, FakeAPIHTTPHandler
+from .server import FakeAPIServer, FakeAPIHTTPHandler
 
 UrlConfigHelperBase = object
 
