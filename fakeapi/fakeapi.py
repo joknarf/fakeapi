@@ -33,6 +33,7 @@ from copy import copy
 from urllib.parse import urlencode, urlparse, unquote_plus #, parse_qs, quote
 from unittest.mock import MagicMock, patch
 from requests.utils import requote_uri
+from server import FakeAPIServer, FakeAPIHTTPHandler
 
 UrlConfigHelperBase = object
 
@@ -164,6 +165,12 @@ class FakeAPI():
     def delete(self, url, **kwargs):
         """ http delete simulation """
         return self.fake_call('delete', url)
+
+    def start_server(self, server, port, http_prefix=None):
+        """ start http server """
+        if http_prefix is None:
+            http_prefix = f"http://{server}:{port}"
+        FakeAPIServer(self, http_prefix, True, (server,port), FakeAPIHTTPHandler)
 
     def mock_class(self, apicli):
         """ to be called in unittest.TestCase.setUp() """
