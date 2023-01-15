@@ -5,7 +5,8 @@ import warnings
 import json
 import requests
 from apiclient import APIClient
-from fakeapi import FakeAPI, UrlConfigHelper, get_url, get_url2
+from apiclient.exceptions import UnexpectedError
+from fakeapi import FakeAPI, FakeResponse, UrlConfigHelper, get_url, get_url2
 
 url_config = {
     'GET http://localhost/api': {
@@ -188,6 +189,14 @@ class UnitTest(unittest.TestCase):
 
 class MyClient(APIClient):
     """ client api """
+
+    def get(self, endpoint, params=None, **kwargs):
+        """ fake call """
+        response = FakeResponse()
+        response.url = endpoint
+        response.text = '{"message": "real api call"}'
+        return response
+
     def call_api(self):
         """ http get """
         return self.get('http://localhost/api').json()
@@ -214,8 +223,8 @@ class TestUrlConfigHelper(unittest.TestCase):
     def test99_urlconfighelper(self):
         """ get url_config from api call """
         try:
-            self.api.get('http://localhost/unkown')
-        except:
+            self.api.get('http://localhost/unknown')
+        except UnexpectedError:
             pass
         self.api.save_urlconfig('tests/urlconfig.json')
 
