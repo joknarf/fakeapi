@@ -232,6 +232,7 @@ class TestUrlConfigHelper(unittest.TestCase):
         self.api.get('http://localhost/unknown')
         self.api.post('http://localhost/unknown')
         self.api.put('http://localhost/unknown')
+        self.api.patch('http://localhost/unknown')
         self.api.delete('http://localhost/unknown')
         self.api.save_urlconfig('tests/urlconfig.json')
 
