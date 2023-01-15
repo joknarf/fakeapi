@@ -164,7 +164,7 @@ class FakeAPI():
         """ http delete simulation """
         return self.fake_call('delete', url)
 
-    def http_server(self, server, port, http_prefix=None, start=True):
+    def http_server(self, server='localhost', port=8080, http_prefix=None, start=True):
         """ start http server """
         if http_prefix is None:
             http_prefix = f"http://{server}:{port}"
