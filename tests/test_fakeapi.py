@@ -202,6 +202,12 @@ class MyClient(APIClient):
         """ http get """
         return self.get('http://localhost/api').json()
 
+    post = get
+    put = get
+    patch = get
+    delete = get
+
+
 class TestMyClient(unittest.TestCase):
     """ Unit Testing mocking MyClient get/post/put/patch """
     fakeapi = FakeAPI({'GET http://localhost/api': {'data': {'message': 'Call successfull'}}})
@@ -224,6 +230,9 @@ class TestUrlConfigHelper(unittest.TestCase):
     def test99_urlconfighelper(self):
         """ get url_config from api call """
         self.api.get('http://localhost/unknown')
+        self.api.post('http://localhost/unknown')
+        self.api.put('http://localhost/unknown')
+        self.api.delete('http://localhost/unknown')
         self.api.save_urlconfig('tests/urlconfig.json')
 
 
