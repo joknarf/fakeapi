@@ -1,4 +1,3 @@
 """ FakeAPI package """
 
-from .fakeapi import FakeAPI, get_url, get_url2
-#from .urlconfighelper import UrlConfigHelper
+from .fakeapi import FakeAPI, UrlConfigHelper, get_url, get_url2

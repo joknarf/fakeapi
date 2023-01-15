@@ -232,12 +232,9 @@ Example:
 """ Generate url_config for tests from MyClient real API calls """
 import json
 from mycli import MyClient
-import fakeapi
-# set the Base class for UrlConfigHelper to your class to test
-fakeapi.UrlConfigHelperBase = MyClient
-from fakeapi.urlconfighelper import UrlConfigHelper
+from fakeapi import UrlConfigHelper
 
-api = UrlConfigHelper()
+api = UrlConfigHelper(MyClient)
 api.call_api()    # make calls to the API and updates api.url_config
 api.save_urlconfig('mytests.json')
 print(json.dumps(api.url_config, indent=2))
