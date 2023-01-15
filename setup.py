@@ -14,7 +14,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/joknarf/fakeapi",
     packages=["fakeapi"],
-    scripts=[],
+    scripts=["fakeapi/fakeapi_server"],
     use_incremental=True,
     setup_requires=['incremental'],
     install_requires=['incremental'],

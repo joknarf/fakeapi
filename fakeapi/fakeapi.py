@@ -90,8 +90,9 @@ class FakeAPI():
         """ Set url_config """
         self.url_config = url_config or {}
         if url_json:
-            with open(url_json, 'r', encoding='utf-8') as jsf:
-                self.url_config = json.load(jsf)
+            jsf = sys.stdin if url_json == '-' else open(url_json, 'r', encoding='utf-8')
+            self.url_config = json.load(jsf)
+            jsf.close()
 
     def reset_history(self):
         """ Reset all calls history"""
@@ -99,7 +100,6 @@ class FakeAPI():
         self.url_history_full = []
         self.url_calls = {}
         self.responses = []
-
 
     def get_conf(self, method, url, params, data):
         """ retrieve conf for url in url_config """
@@ -166,11 +166,11 @@ class FakeAPI():
         """ http delete simulation """
         return self.fake_call('delete', url)
 
-    def start_server(self, server, port, http_prefix=None):
+    def http_server(self, server, port, http_prefix=None, start=True):
         """ start http server """
         if http_prefix is None:
             http_prefix = f"http://{server}:{port}"
-        FakeAPIServer(self, http_prefix, True, (server,port), FakeAPIHTTPHandler)
+        return FakeAPIServer(self, http_prefix, start, (server,port), FakeAPIHTTPHandler)
 
     def mock_class(self, apicli):
         """ to be called in unittest.TestCase.setUp() """
@@ -215,7 +215,7 @@ class FakeAPIHTTPHandler(BaseHTTPRequestHandler):
     def _set_response(self, status_code, data):
         """ set response """
         self.send_response(status_code)
-        self.send_header('Content-type', 'text/plain')
+        self.send_header('Content-type', self.server.content_type)
         self.end_headers()
         self.wfile.write(str(data).encode())
 
@@ -242,6 +242,12 @@ class FakeAPIServer(HTTPServer):
         """ add fakeapi property """
         self.fakeapi = fakeapi
         self.http_prefix = http_prefix
+        self.content_type = 'application/json'
         super().__init__(*args, **kwargs)
         if start:
-            self.serve_forever()
+            print('starting http server')
+            try:
+                self.serve_forever()
+            except KeyboardInterrupt:
+                print('stopping http server')
+                sys.exit(0)
