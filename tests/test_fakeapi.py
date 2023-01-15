@@ -4,8 +4,9 @@ import unittest
 import warnings
 import json
 import requests
+from io import BytesIO as IO
 from apiclient import APIClient
-from fakeapi import FakeAPI, FakeResponse, UrlConfigHelper, get_url, get_url2
+from fakeapi import FakeAPI, FakeResponse, FakeAPIServer, FakeAPIHTTPHandler, UrlConfigHelper, get_url, get_url2
 
 url_config = {
     'GET http://localhost/api': {
@@ -186,6 +187,7 @@ class UnitTest(unittest.TestCase):
         """ test http server """
         server = self.api.http_server(start=False)
 
+
 class MyClient(APIClient):
     """ client api """
 
@@ -244,6 +246,27 @@ class TestCallAPI(unittest.TestCase):
         self.mocks.get.assert_called_with('http://localhost/api', timeout=60)
         print(data)
 
+
+### Handler mock ###
+class MockRequest(object):
+    def sendall(self, a):
+        print(a)
+        return "OK"
+
+    def makefile(self, *args, **kwargs):
+        return IO(b"GET /")
+
+class MockServer(FakeAPIServer):
+    def __init__(self, fakeapi, http_prefix, ip_port, Handler):
+        self.fakeapi = fakeapi
+        self.http_prefix = http_prefix
+        self.content_type = 'application/json'
+        handler = Handler(MockRequest(), ip_port, self)
+
+class TestHandler(unittest.TestCase):
+    def test999_handler(self):
+        # The GET request will be sent here
+        server = MockServer(FakeAPI(), None, ('0.0.0.0', 8888), FakeAPIHTTPHandler)
 
 
 if __name__ == "__main__":
