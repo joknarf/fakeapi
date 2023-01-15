@@ -11,6 +11,7 @@ Faking/Mocking API Rest Call requests
 
 Faking API calls using static fixtures with FakeAPI class.  
 Mocking API calls using FakeAPI get/post/patch/delete methods.  
+Create HTTP server Rest API with a single json response file.
 
 # FakeAPI class
 
@@ -20,23 +21,45 @@ Can be used during development of Application that must use 3rd party API withou
 
 Another purpose is to use FakeAPI class to mock http requests when doing Unit testing of application that is using 3rd party API calls (the tests won't actually call the 3rd party API that is not to be tested)
 
+FakeAPI class is also able to act as a HTTP Rest API server using a single json description of responses to calls.
+
 ## Quick examples:
->```python
->>>> from fakeapi import FakeAPI
->>>> api = FakeAPI({
->  'GET http://localhost/api': {
->    'status_code': 200,
->    'data': {
->      'message': 'Call successfull'
->    }
->  }
->})
->>>> response = api.get('http://localhost/api')
->>>> response.status_code
->200
->>>> response.json()
->{'message': 'Call successfull'}
->```
+
+### Start http server using `fakeapi_server` responding to 'GET http://localhost:8080/api'
+```shell
+$ fakeapi_server <<< '{ "GET http://localhost:8080/api": { "data": { "message": "Call successfull" }}}'
+Starting http server : http://localhost:8080
+127.0.0.1 - - [15/Jan/2023 13:00:20] GET localhost:8080/api
+fakeapi: Calling: GET http://localhost:8080/api
+127.0.0.1 - - [15/Jan/2023 13:00:20] "GET /api HTTP/1.1" 200 -
+```
+
+On Client side:  
+```shell
+$ curl http://localost:8080/api
+{"message": "Call successfull"}
+```
+
+### Using FakeAPI class
+```python
+>>> from fakeapi import FakeAPI
+>>> api = FakeAPI({
+  'GET http://localhost/api': {
+    'status_code': 200,
+    'data': {
+      'message': 'Call successfull'
+    }
+  }
+})
+>>> response = api.get('http://localhost/api')
+>>> response.status_code
+200
+>>> response.json()
+{'message': 'Call successfull'}
+>>> api.http_server()
+Starting http server : http://localhost:8080
+...
+```
 
 FakeAPI class can easily mock requests calls in unittest.  
 Usefull to test Application that is calling 3rd party API that is not to be tested.
@@ -78,8 +101,35 @@ Usefull to test Application that is calling 3rd party API that is not to be test
 >OK
 >```
 
+## fakeapi_server usage
 
-## Usage
+fakeapi_server is starting an http server responding to http calls defined in json description.
+json url description :
+
+```json
+  "<METHOD> <url>": {
+    "status_code": <status_code>,
+    "data": <url_data>
+  }
+```
+
+```shell
+$ ./fakeapi_server -h
+usage: fakeapi_server [-h] [-s SERVER] [-p PORT] [-P PREFIX] [jsonfile]
+
+positional arguments:
+  jsonfile              Json file for FakeAPI
+
+options:
+  -h, --help            show this help message and exit
+  -s SERVER, --server SERVER
+                        HTTP server address
+  -p PORT, --port PORT  HTTP server port
+  -P PREFIX, --prefix PREFIX
+                        HTTP prefix (http://server:port)
+```
+
+## FakeAPI class Usage
 
 FakeAPI class defines the 5 methods:
 * get
@@ -107,10 +157,10 @@ static data can be defined several ways :
 Each different url calls can be configured in url_config to provide specific status_code or data.
 
 Providing data in url_config for url
-```python
-  '<METHOD> <url>': {
-    'status_code': <status_code>,
-    'data': <url_data>
+```json
+  "<METHOD> <url>": {
+    "status_code": <status_code>,
+    "data": <url_data>
   }
 ```
 * `<METHOD>      `: http method : GET/POST/PUT/PATCH/DELETE

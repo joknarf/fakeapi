@@ -217,16 +217,14 @@ class FakeAPIHTTPHandler(BaseHTTPRequestHandler):
         self.send_response(status_code)
         self.send_header('Content-type', self.server.content_type)
         self.end_headers()
-        self.wfile.write(str(data).encode())
+        self.wfile.write(str(data).encode('utf-8'))
 
     def do_ALL(self):
         """ do http calls """
         self.log_message(f"{self.command} {self.headers['Host']}{self.path}")
-        self.log_message(f'=> {self.command} {self.server.http_prefix}{self.path}')
         content_length = int(self.headers['Content-Length'] or 0)
-        text = self.rfile.read(content_length).decode('utf-8')
-        self.log_message(text)
-        payload = json.loads(text or 'null')
+        payload_text = self.rfile.read(content_length).decode('utf-8')
+        payload = json.loads(payload_text or 'null')
         call = getattr(self.server.fakeapi, f'{self.command.lower()}')
         response = call(f'{self.server.http_prefix}{self.path}', data=payload)
         self._set_response(response.status_code, response.text)
@@ -245,9 +243,9 @@ class FakeAPIServer(HTTPServer):
         self.content_type = 'application/json'
         super().__init__(*args, **kwargs)
         if start:
-            print('starting http server')
+            print(f'Starting http server : http://{self.server_name}:{self.server_port}')
             try:
                 self.serve_forever()
             except KeyboardInterrupt:
-                print('stopping http server')
+                print('Stopping http server')
                 sys.exit(0)
