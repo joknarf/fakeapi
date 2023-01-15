@@ -1,10 +1,11 @@
 #!/bin/env python3
 """ test """
 import unittest
+import warnings
 import json
 import requests
 from apiclient import APIClient
-from fakeapi import FakeAPI, get_url, get_url2
+from fakeapi import FakeAPI, UrlConfigHelper, get_url, get_url2
 
 url_config = {
     'GET http://localhost/api': {
@@ -72,6 +73,10 @@ class UnitTest(unittest.TestCase):
     """ testing fakeapi """
     api = FakeAPI(url_config)
 
+    def setUp(self):
+        warnings.filterwarnings(action="ignore",
+                                message="unclosed",
+                                category=ResourceWarning)
     def test1_fakeapi(self):
         """ test GET http://localhost/api """
         url = 'http://localhost/api'
@@ -177,6 +182,9 @@ class UnitTest(unittest.TestCase):
         self.api.set_config(url_json='tests/test.json')
         self.assertIn("GET http://localhost/api/test.json", self.api.url_config)
 
+    def test7_http_server(self):
+        """ test http server """
+        server = self.api.http_server(start=False)
 
 class MyClient(APIClient):
     """ client api """
@@ -199,6 +207,18 @@ class TestMyClient(unittest.TestCase):
         self.apicli.get.assert_called_with('http://localhost/api')
         print(data)
 
+class TestUrlConfigHelper(unittest.TestCase):
+    """ UrlConfigHelper test """
+    api = UrlConfigHelper(MyClient)
+
+    def test99_urlconfighelper(self):
+        """ get url_config from api call """
+        try:
+            self.api.get('http://localhost/unkown')
+        except:
+            pass
+        self.api.save_urlconfig('tests/urlconfig.json')
+
 
 # mock_module test
 def call_api():
@@ -218,6 +238,7 @@ class TestCallAPI(unittest.TestCase):
         data = call_api()   # requests calls are mocked to fakeAPI
         self.mocks.get.assert_called_with('http://localhost/api', timeout=60)
         print(data)
+
 
 
 if __name__ == "__main__":
