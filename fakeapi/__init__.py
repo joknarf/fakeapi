@@ -1,5 +1,5 @@
 """ FakeAPI package """
 
-from .fakeapi import FakeAPI, get_url
+from .fakeapi import FakeAPI, get_url, get_url2
 from .server import FakeAPIServer, FakeAPIHTTPHandler
 #from .urlconfighelper import UrlConfigHelper
