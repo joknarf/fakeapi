@@ -5,7 +5,6 @@ import warnings
 import json
 import requests
 from apiclient import APIClient
-from apiclient.exceptions import UnexpectedError
 from fakeapi import FakeAPI, FakeResponse, UrlConfigHelper, get_url, get_url2
 
 url_config = {
@@ -222,10 +221,7 @@ class TestUrlConfigHelper(unittest.TestCase):
 
     def test99_urlconfighelper(self):
         """ get url_config from api call """
-        try:
-            self.api.get('http://localhost/unknown')
-        except UnexpectedError:
-            pass
+        self.api.get('http://localhost/unknown')
         self.api.save_urlconfig('tests/urlconfig.json')
 
 
