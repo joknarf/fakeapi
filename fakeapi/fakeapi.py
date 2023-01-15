@@ -32,6 +32,7 @@ import sys
 from copy import copy
 from urllib.parse import urlencode, urlparse, unquote_plus #, parse_qs, quote
 from unittest.mock import MagicMock, patch
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from requests.utils import requote_uri
 
 UrlConfigHelperBase = object
@@ -89,8 +90,9 @@ class FakeAPI():
         """ Set url_config """
         self.url_config = url_config or {}
         if url_json:
-            with open(url_json, 'r', encoding='utf-8') as jsf:
-                self.url_config = json.load(jsf)
+            jsf = sys.stdin if url_json == '-' else open(url_json, 'r', encoding='utf-8')
+            self.url_config = json.load(jsf)
+            jsf.close()
 
     def reset_history(self):
         """ Reset all calls history"""
@@ -98,7 +100,6 @@ class FakeAPI():
         self.url_history_full = []
         self.url_calls = {}
         self.responses = []
-
 
     def get_conf(self, method, url, params, data):
         """ retrieve conf for url in url_config """
@@ -165,6 +166,12 @@ class FakeAPI():
         """ http delete simulation """
         return self.fake_call('delete', url)
 
+    def http_server(self, server, port, http_prefix=None, start=True):
+        """ start http server """
+        if http_prefix is None:
+            http_prefix = f"http://{server}:{port}"
+        return FakeAPIServer(self, http_prefix, start, (server,port), FakeAPIHTTPHandler)
+
     def mock_class(self, apicli):
         """ to be called in unittest.TestCase.setUp() """
         apicli.get    = MagicMock(side_effect=self.get)
@@ -201,3 +208,44 @@ class MockAPI:
     put = None
     patch = None
     delete = None
+
+class FakeAPIHTTPHandler(BaseHTTPRequestHandler):
+    """ Class handler for HTTP """
+
+    def _set_response(self, status_code, data):
+        """ set response """
+        self.send_response(status_code)
+        self.send_header('Content-type', self.server.content_type)
+        self.end_headers()
+        self.wfile.write(str(data).encode('utf-8'))
+
+    def do_ALL(self):
+        """ do http calls """
+        self.log_message(f"{self.command} {self.headers['Host']}{self.path}")
+        content_length = int(self.headers['Content-Length'] or 0)
+        payload_text = self.rfile.read(content_length).decode('utf-8')
+        payload = json.loads(payload_text or 'null')
+        call = getattr(self.server.fakeapi, f'{self.command.lower()}')
+        response = call(f'{self.server.http_prefix}{self.path}', data=payload)
+        self._set_response(response.status_code, response.text)
+
+    do_GET    = do_ALL
+    do_POST   = do_ALL
+    do_PUT    = do_ALL
+    do_DELETE = do_ALL
+
+class FakeAPIServer(HTTPServer):
+    """ HTTPServer with fakeapi """
+    def __init__(self, fakeapi, http_prefix, start, *args, **kwargs):
+        """ add fakeapi property """
+        self.fakeapi = fakeapi
+        self.http_prefix = http_prefix
+        self.content_type = 'application/json'
+        super().__init__(*args, **kwargs)
+        if start:
+            print(f'Starting http server : http://{self.server_name}:{self.server_port}')
+            try:
+                self.serve_forever()
+            except KeyboardInterrupt:
+                print('Stopping http server')
+                sys.exit(0)
