@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 FakeAPI class to simulate rest API calls from json static files/data
 Usefull to easily mock requests or api-client (APIClient) in unittest
@@ -29,31 +30,11 @@ __author__ = "Franck Jouvanceau"
 
 import json
 import sys
+import argparse
 from copy import copy
-from urllib.parse import urlencode, urlparse, unquote_plus #, parse_qs, quote
 from unittest.mock import MagicMock, patch
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from requests.utils import requote_uri
-
-def get_url(url, params):
-    """
-    full url string from current url + params
-    calculated like in response.url from requests
-    """
-    params = params or {}
-    urlp = urlparse(url)
-    query = urlencode(params)
-    urlp = urlp._replace(query='&'.join([urlp.query, query]).strip('&'))
-    return requote_uri(urlp.geturl())
-
-def get_url2(url, params):
-    """ full url without encoding """
-    params = params or {}
-    urlp = urlparse(url)
-    query = unquote_plus(urlencode(params))
-    urlp = urlp._replace(query='&'.join([urlp.query, query]).strip('&'))
-    return urlp.geturl()
-
+from . import urlfunc
+from . import fakeserver
 
 class FakeResponse():
     """ Fake Response """
@@ -102,10 +83,10 @@ class FakeAPI():
     def get_conf(self, method, url, params, data):
         """ retrieve conf for url in url_config """
         method = method.upper()
-        url_key1 = get_url(url, params)
-        url_key2 = get_url2(url, params)
-        url_key3 = get_url(url_key1, data)
-        url_key4 = get_url2(url_key2, data)
+        url_key1 = urlfunc.get_url(url, params)
+        url_key2 = urlfunc.get_url2(url, params)
+        url_key3 = urlfunc.get_url(url_key1, data)
+        url_key4 = urlfunc.get_url2(url_key2, data)
         self.url_history_full.append(f'{method} {url_key3}')
         print(f'fakeapi: Calling: {method} {url_key3}', file=sys.stderr)
         for url_k in list({url_key3, url_key4, url_key1, url_key2}):
@@ -122,7 +103,7 @@ class FakeAPI():
         response.params = params
         response.payload = data
         response.status_code = 201 if method == 'post' else 200
-        response.url = get_url(url, params)
+        response.url = urlfunc.get_url(url, params)
         url_method = f'{method.upper()} {response.url}'
         return_data = {}
         url_conf = self.get_conf(method, url, params, data)
@@ -168,7 +149,7 @@ class FakeAPI():
         """ start http server """
         if http_prefix is None:
             http_prefix = f"http://{server}:{port}"
-        return FakeAPIServer(self, http_prefix, start, (server,port), FakeAPIHTTPHandler)
+        return fakeserver.FakeAPIServer(self, http_prefix, start, (server,port), fakeserver.FakeAPIHTTPHandler)
 
     def mock_class(self, apicli):
         """ to be called in unittest.TestCase.setUp() """
@@ -207,94 +188,3 @@ class MockAPI:
     patch = None
     delete = None
 
-class FakeAPIHTTPHandler(BaseHTTPRequestHandler):
-    """ Class handler for HTTP """
-
-    def _set_response(self, status_code, data):
-        """ set response """
-        self.send_response(status_code)
-        self.send_header('Content-type', self.server.content_type)
-        self.end_headers()
-        self.wfile.write(str(data).encode('utf-8'))
-
-    def do_ALL(self):
-        """ do http calls """
-        self.log_message(f"{self.command} {self.headers['Host']}{self.path}")
-        content_length = int(self.headers['Content-Length'] or 0)
-        payload_text = self.rfile.read(content_length).decode('utf-8')
-        payload = json.loads(payload_text or 'null')
-        call = getattr(self.server.fakeapi, f'{self.command.lower()}')
-        response = call(f'{self.server.http_prefix}{self.path}', data=payload)
-        self._set_response(response.status_code, response.text)
-
-    do_GET    = do_ALL
-    do_POST   = do_ALL
-    do_PUT    = do_ALL
-    do_DELETE = do_ALL
-
-class FakeAPIServer(HTTPServer):
-    """ HTTPServer with fakeapi """
-    def __init__(self, fakeapi, http_prefix, start, *args, **kwargs):
-        """ add fakeapi property """
-        self.fakeapi = fakeapi
-        self.http_prefix = http_prefix
-        self.content_type = 'application/json'
-        super().__init__(*args, **kwargs)
-        if start:
-            print(f'Starting http server : http://{self.server_name}:{self.server_port}')
-            try:
-                self.serve_forever()
-            except KeyboardInterrupt:
-                print('Stopping http server')
-                sys.exit(0)
-
-# function with class naming convention, as creates derived class instance
-def UrlConfigHelper(cliclass):
-    """ creates Derived Class from cliclass """
-    class UrlConfigHelperClass(cliclass):
-        """
-        Class to contruct url_config from real API calls
-        to create test sets
-        """
-        url_config = {}
-
-        def _call(self, method, url, params=None, data=None, **kwargs):
-            """
-            call super().method with params
-            add returned urls/data in url_config
-            """
-            call = getattr(super(), method)
-            response = call(url, data=data, params=params, **kwargs)
-            url = get_url(response.url, data)
-            self.url_config[f'{method.upper()} {url}'] = {
-                'status_code': response.status_code,
-                'data': response.json() if response.content else None,
-                'payload': data
-            }
-            return response
-
-        def save_urlconfig(self, json_file):
-            """ save url_config to json file """
-            with open(json_file, 'w', encoding='utf-8') as jsf:
-                json.dump(self.url_config, jsf, indent=2)
-
-        def get(self, url, params=None, **kwargs):
-            """ supercharge get """
-            return self._call('get', url, params, **kwargs)
-
-        def post(self, url, data=None, params=None, **kwargs):
-            """ supercharge post """
-            return self._call('post', url, params, data, **kwargs)
-
-        def put(self, url, data=None, params=None, **kwargs):
-            """ supercharge put """
-            return self._call('put', url, params, data, **kwargs)
-
-        def patch(self, url, data=None, params=None, **kwargs):
-            """ supercharge patch """
-            return self._call('patch', url, params, data, **kwargs)
-
-        def delete(self, url, **kwargs):
-            """ supercharge delete """
-            return self._call('delete', url, **kwargs)
-    return UrlConfigHelperClass()

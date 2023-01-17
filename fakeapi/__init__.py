@@ -1,3 +1,6 @@
 """ FakeAPI package """
 
-from .fakeapi import FakeAPI, FakeResponse, FakeAPIServer, FakeAPIHTTPHandler, UrlConfigHelper, get_url, get_url2
+from .api import FakeAPI, FakeResponse
+from .fakeserver import FakeAPIServer, FakeAPIHTTPHandler
+from .urlfunc import get_url, get_url2
+from .urlconfighelper import UrlConfigHelper

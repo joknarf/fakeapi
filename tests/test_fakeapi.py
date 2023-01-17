@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """ test """
+import os
+import sys
 import unittest
 import warnings
 import json
-import requests
 from io import BytesIO as IO
+import requests
 from apiclient import APIClient
-from fakeapi import FakeAPI, FakeResponse, FakeAPIServer, FakeAPIHTTPHandler, UrlConfigHelper, get_url, get_url2
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from fakeapi import (FakeAPI, FakeResponse, FakeAPIServer, FakeAPIHTTPHandler,
+                     UrlConfigHelper, get_url, get_url2)
 
 url_config = {
     'GET http://localhost/api': {
@@ -186,6 +190,7 @@ class UnitTest(unittest.TestCase):
     def test7_http_server(self):
         """ test http server """
         server = self.api.http_server(start=False)
+        self.assertEqual(server.server_port, 8080)
 
 
 class MyClient(APIClient):
@@ -258,25 +263,32 @@ class TestCallAPI(unittest.TestCase):
 
 
 ### Handler mock ###
-class MockRequest(object):
+class MockRequest():
+    """ mock request """
     def sendall(self, a):
+        """ sendall mock """
         print(a)
         return "OK"
 
     def makefile(self, *args, **kwargs):
+        """ makefile GET / """
         return IO(b"GET /")
 
 class MockServer(FakeAPIServer):
+    """ Mock HTTPServer """
     def __init__(self, fakeapi, http_prefix, ip_port, Handler):
+        """ init supercharge """
         self.fakeapi = fakeapi
         self.http_prefix = http_prefix
-        self.content_type = 'application/json'
-        handler = Handler(MockRequest(), ip_port, self)
+        self.content_type = 'text/plain'
+        self.handler = Handler(MockRequest(), ip_port, self)
 
 class TestHandler(unittest.TestCase):
+    """ test FAKEAPIHTTPHandler """
     def test999_handler(self):
-        # The GET request will be sent here
+        """ The GET request will be sent here """
         server = MockServer(FakeAPI(), None, ('0.0.0.0', 8888), FakeAPIHTTPHandler)
+        self.assertEqual(server.content_type, 'text/plain')
 
 
 if __name__ == "__main__":

@@ -25,9 +25,9 @@ FakeAPI class is also able to act as a HTTP Rest API server using a single json 
 
 ## Quick examples:
 
-### Start http server using `fakeapi_server` responding to 'GET http://localhost:8080/api'
+### Start http server using `python -m fakeapi` responding to 'GET http://localhost:8080/api'
 ```shell
-$ fakeapi_server <<< '{ "GET http://localhost:8080/api": { "data": { "message": "Call successfull" }}}'
+$ python -m fakeapi <<< '{ "GET http://localhost:8080/api": { "data": { "message": "Call successfull" }}}'
 Starting http server : http://localhost:8080
 127.0.0.1 - - [15/Jan/2023 13:00:20] GET localhost:8080/api
 fakeapi: Calling: GET http://localhost:8080/api
@@ -101,9 +101,9 @@ Usefull to test Application that is calling 3rd party API that is not to be test
 >OK
 >```
 
-## fakeapi_server usage
+## fakeapi server usage
 
-fakeapi_server is starting an http server responding to http calls defined in json description.
+`python -m fakeapi` is starting an http server responding to http calls defined in json description.
 json url description :
 
 ```json
@@ -113,9 +113,9 @@ json url description :
   }
 ```
 
-```shell
-$ ./fakeapi_server -h
-usage: fakeapi_server [-h] [-s SERVER] [-p PORT] [-P PREFIX] [jsonfile]
+```
+$ python -m fakeapi -h
+usage: python -m fakeapi [-h] [-s SERVER] [-p PORT] [-P PREFIX] [jsonfile]
 
 positional arguments:
   jsonfile              Json file for FakeAPI
