@@ -54,13 +54,14 @@ class FakeResponse():
 class FakeAPI():
     """ Fake API from static json files """
 
-    def __init__(self, url_config=None, url_json=None, returns='response'):
+    def __init__(self, url_config=None, url_json=None, nourl_status=404, returns='response'):
         """
             url_config optional dict to map urls to json files
             url_json path to json file containing url_config dict
             returns may be 'response' or 'json'
         """
         self.returns = returns
+        self.nourl_status = nourl_status
         self.set_config(url_config, url_json)
         self.reset_history()
 
@@ -110,6 +111,8 @@ class FakeAPI():
             if 'status_code' in url_conf:
                 response.status_code = url_conf['status_code']
             return_data = url_conf['data']
+        else:
+            response.status_code = self.nourl_status
         response.text = json.dumps(return_data)
         response.content = json.dumps(return_data).encode('utf-8')
         response.ok = response.status_code < 400
