@@ -170,7 +170,7 @@ Providing data in url_config for url
 
 When a request method occurs on `<url>` if the key `<METHOD> <url>` has a entry in url_config, returns 'data'/'status_code' if defined.  
 
-## FakePI returns FakeResponse or json
+## FakeAPI returns FakeResponse or json
 
 FakeAPI methods by default returns `FakeResponse` with following :
 * status_code = 200/201 (for post) or status_code defined in url_config
