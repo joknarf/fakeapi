@@ -1,3 +1,4 @@
+""" url generation functions """
 from urllib.parse import urlencode, urlparse, unquote_plus #, parse_qs, quote
 from requests.utils import requote_uri
 

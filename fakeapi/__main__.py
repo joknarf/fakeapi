@@ -4,6 +4,7 @@ import argparse
 from fakeapi import FakeAPI
 
 def fakeapi_server():
+    """ start http server according to args """
     parser = argparse.ArgumentParser(prog = 'python -m fakeapi')
     parser.add_argument("-s", "--server", type=str, default='localhost',
                         help="HTTP server address")

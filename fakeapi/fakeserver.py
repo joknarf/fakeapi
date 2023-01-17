@@ -1,3 +1,6 @@
+""" Fake API HTTP server class"""
+# pylint: disable=C0103
+
 import sys
 import json
 from http.server import HTTPServer, BaseHTTPRequestHandler

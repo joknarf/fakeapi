@@ -1,5 +1,7 @@
+""" UrlConfigHelper to call api with url_config saving """
+# pylint: disable=C0103
 import json
-from fakeapi import get_url
+from . import urlfunc
 
 # function with class naming convention, as creates derived class instance
 def UrlConfigHelper(cliclass):
@@ -18,7 +20,7 @@ def UrlConfigHelper(cliclass):
             """
             call = getattr(super(), method)
             response = call(url, data=data, params=params, **kwargs)
-            url = get_url(response.url, data)
+            url = urlfunc.get_url(response.url, data)
             self.url_config[f'{method.upper()} {url}'] = {
                 'status_code': response.status_code,
                 'data': response.json() if response.content else None,

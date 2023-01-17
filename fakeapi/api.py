@@ -24,13 +24,12 @@ api = FakeAPI(url_config = {
 
 url_config data can be loaded by json file specified in url_json.
 """
-# pylint: disable=W0613,C0103,R0902,R0903
+# pylint: disable=W0613,C0103,R0902,R0903,R1732
 
 __author__ = "Franck Jouvanceau"
 
 import json
 import sys
-import argparse
 from copy import copy
 from unittest.mock import MagicMock, patch
 from . import urlfunc
@@ -149,7 +148,8 @@ class FakeAPI():
         """ start http server """
         if http_prefix is None:
             http_prefix = f"http://{server}:{port}"
-        return fakeserver.FakeAPIServer(self, http_prefix, start, (server,port), fakeserver.FakeAPIHTTPHandler)
+        return fakeserver.FakeAPIServer(self, http_prefix, start, (server,port),
+                                        fakeserver.FakeAPIHTTPHandler)
 
     def mock_class(self, apicli):
         """ to be called in unittest.TestCase.setUp() """
@@ -187,4 +187,3 @@ class MockAPI:
     put = None
     patch = None
     delete = None
-
