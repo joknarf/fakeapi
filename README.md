@@ -107,10 +107,12 @@ Usefull to test Application that is calling 3rd party API that is not to be test
 json url description :
 
 ```json
+{
   "<METHOD> <url>": {
     "status_code": <status_code>,
     "data": <url_data>
-  }
+  },...
+}
 ```
 
 ```
@@ -158,10 +160,12 @@ Each different url calls can be configured in url_config to provide specific sta
 
 Providing data in url_config for url
 ```json
+{
   "<METHOD> <url>": {
     "status_code": <status_code>,
     "data": <url_data>
-  }
+  },...
+}
 ```
 * `<METHOD>      `: http method : GET/POST/PUT/PATCH/DELETE
 * `<url>         `: full url that is called (with query string)
