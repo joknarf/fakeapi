@@ -105,7 +105,7 @@ class FakeAPI():
         response.status_code = 201 if method == 'post' else 200
         response.url = urlfunc.get_url(url, params)
         url_method = f'{method.upper()} {response.url}'
-        return_data = {}
+        return_data = ''
         url_conf = self.get_conf(method, url, params, data)
         if url_conf:
             if 'status_code' in url_conf:
@@ -113,8 +113,8 @@ class FakeAPI():
             return_data = url_conf['data']
         else:
             response.status_code = self.nourl_status
-        response.text = json.dumps(return_data)
-        response.content = json.dumps(return_data).encode('utf-8')
+        response.text = return_data if isinstance(return_data, str) else json.dumps(return_data)
+        response.content = response.text.encode('utf-8')
         response.ok = response.status_code < 400
         self.responses.append(copy(response))
         self.url_history.append(url_method)
