@@ -16,3 +16,5 @@ GET http://localhost:8080/comments/1 HTTP/1.1
 
 ###
 
+GET http://localhost:8080/comments?name=My%20name
+
