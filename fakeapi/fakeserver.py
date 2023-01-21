@@ -17,7 +17,7 @@ class FakeAPIHTTPHandler(BaseHTTPRequestHandler):
 
     def do_ALL(self):
         """ do http calls """
-        self.log_message(f"{self.command} {self.headers['Host']}{self.path}")
+        self.log_message(f"{self.command} {self.headers['Host']}{self.path}".replace("%","%%"))
         content_length = int(self.headers['Content-Length'] or 0)
         payload_text = self.rfile.read(content_length).decode('utf-8')
         payload = json.loads(payload_text or 'null')
