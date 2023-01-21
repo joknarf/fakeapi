@@ -1,0 +1,5 @@
+{
+    "POST http://localhost:8080/comments":{"data":{"message":"ok"}},
+    "GET http://localhost:8080/comments":{"data":[{"name":"sample","time":"Wed"}]},
+    "GET http://localhost:8080/comments/1":{"data":{"name":"sample","time":"Wed"}}
+}
