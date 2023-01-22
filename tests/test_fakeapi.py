@@ -201,6 +201,7 @@ class MyClient(APIClient):
         response = FakeResponse()
         response.url = endpoint
         response.text = '{"message": "real api call"}'
+        response.content = response.text.encode('utf-8')
         return response
 
     def call_api(self):
@@ -234,7 +235,8 @@ class TestUrlConfigHelper(unittest.TestCase):
 
     def test99_urlconfighelper(self):
         """ get url_config from api call """
-        self.api.get('http://localhost/unknown')
+        response = self.api.get('http://localhost/unknown')
+        self.assertEqual(response.json(), {"message": "real api call"})
         self.api.post('http://localhost/unknown')
         self.api.put('http://localhost/unknown')
         self.api.patch('http://localhost/unknown')

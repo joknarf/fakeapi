@@ -2,5 +2,7 @@
     "POST http://localhost:8080/comments":{"data":{"message":"ok"}},
     "GET http://localhost:8080/comments":{"data":[{"name":"sample","time":"Wed"}]},
     "GET http://localhost:8080/comments/1":{"data":{"name":"sample","time":"Wed"}},
-    "GET http://localhost:8080/comments?name=My%20name":{"data":{"name":"My Name","time":"Wed"}}
+    "GET http://localhost:8080/comments?name=My%20name":{"data":{"name":"My Name","time":"Wed"}},
+    "GET http://localhost:8080/subnets?name=192.168.0.0/24": {"data":{"name":"192.168.0.0/24", "gateway":"192.168.0.1"}},
+    "POST http://localhost:8080/subnets?name=192.168.0.0/24&gateway=192.168.0.1": {"data":{"message":"created"}}
 }
