@@ -1,4 +1,4 @@
-[![Travis CI](https://app.travis-ci.com/joknarf/pgtree.svg?token=ERTmZfyqzDZTSfQwkAfa&branch=master)](https://travis-ci.com/github/joknarf/fakeapi)
+[![Travis CI](https://app.travis-ci.com/joknarf/fakeapi.svg?token=ERTmZfyqzDZTSfQwkAfa&branch=main)](https://travis-ci.com/github/joknarf/fakeapi)
 [![Codecov](https://codecov.io/github/joknarf/fakeapi/coverage.svg?branch=main)](https://codecov.io/gh/joknarf/fakeapi)
 [![Upload Python Package](https://github.com/joknarf/fakeapi/actions/workflows/python-publish.yml/badge.svg)](https://github.com/joknarf/fakeapi/actions?query=workflow%3A%22Upload+Python+Package%22)
 [![Pypi version](https://img.shields.io/pypi/v/fakeapi.svg)](https://pypi.org/project/fakeapi/)
