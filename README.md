@@ -36,7 +36,7 @@ fakeapi: Calling: GET http://localhost:8080/api
 
 On Client side:  
 ```shell
-$ curl http://localost:8080/api
+$ curl http://localhost:8080/api
 {"message": "Call successfull"}
 ```
 
